@@ -79,6 +79,7 @@ import ResourceSelect from 'data_resources/components/select'
 import QueryValueSelect from 'queries/components/value_select'
 import VueTrix from 'utils/components/vue_trix'
 import { titleize } from 'utils/scripts/string'
+import api from 'api'
 
 const SINGLE_LINE_INPUT_NAMES = [
   'name',
@@ -123,8 +124,16 @@ export default {
   emits: ['update:modelValue', 'select', 'enter'],
   data () {
     return {
-      dataValue: this.modelValue
+      isLoading: false,
+      dataValue: this.modelValue,
+      autoupdate_query: null,
+      valueColumnIndex: 0,
+      autoupdate_columns: [],
+      autoupdate_data: []
     }
+  },
+  created () {
+    if(this.column.can_autoupdate) this.loadUpdateQuery()
   },
   computed: {
     type () {
@@ -166,12 +175,49 @@ export default {
       } else {
         return false
       }
+    },
+    variablesData () {
+      if (this.autoupdate_query && this.column.can_autoupdate && this.formData) {
+        return this.autoupdate_query.preferences.variables.reduce((acc, variable) => {
+          if (variable.name !== 'search') {
+            acc[variable.name] = this.formData[variable.name]
+          }
+
+          return acc
+        }, {})
+      } else {
+        return {}
+      }
+    },
+    isSearchableQuery () {
+      return this.autoupdate_query && this.autoupdate_query.preferences.variables.find((variable) => variable.name === 'search')
+    },
+    updateQueryId () {
+      return this.column.autoupdate_query_id
     }
   },
   watch: {
+    updateQueryId () {
+      this.optionsRespCache = {}
+      this.autoupdate_data = []
+
+      this.loadUpdateQuery()
+    },
     type () {
       this.dataValue = ''
       this.$emit('update:modelValue', '')
+    },
+    variablesData: {
+      deep: true,
+      handler (newValue, oldValue) {
+        if (JSON.stringify(newValue) !== JSON.stringify(oldValue) && this.column.can_autoupdate) {
+          if (Array.isArray(this.modelValue) ? this.modelValue.length : !!this.modelValue) {
+            this.$emit('update:modelValue', this.multiple ? [] : '')
+          }
+
+          this.getNewValue()
+        }
+      }
     }
   },
   methods: {
@@ -234,6 +280,66 @@ export default {
         this.$emit('update:modelValue', new Date(datetime.getTime() - datetime.getTimezoneOffset() * 60000))
         this.$emit('select')
       }
+    },
+    loadUpdateQuery () {
+      return api.get(`queries/${this.column.autoupdate_query_id}`, {
+        params: {
+          include: 'tags'
+        }
+      }).then((result) => {
+        this.autoupdate_query = result.data.data
+      }).catch((error) => {
+        console.error(error)
+
+        if (error.response.data?.errors) {
+          this.$Message.error(error.response.data.errors.join('\n'))
+        }
+      })
+    },
+    getNewValue (query) {
+      this.isLoading = true
+
+      const variables = { ...this.variablesData }
+
+      if (this.isSearchableQuery) {
+        variables.search = query
+      }
+
+      const cacheKey = JSON.stringify(variables)
+
+      this.optionsRespCache ||= {}
+      this.optionsRespCache[cacheKey] ||= api.get(`run_queries/${this.column.autoupdate_query_id}`, {
+        params: {
+          variables,
+          limit: this.isSearchableQuery ? LOAD_ITEMS_LIMIT : null
+        }
+      })
+
+      return this.optionsRespCache[cacheKey].then((result) => {
+        this.autoupdate_columns = result.data.meta.columns
+        this.autoupdate_data = result.data.data
+
+        this.assignValueIndexFromColumns(this.autoupdate_columns)
+        if(this.autoupdate_data.length > 0) {
+          this.$emit('update:modelValue', this.autoupdate_data[0][this.valueColumnIndex])
+        }
+      }).catch((error) => {
+        console.error(error)
+      }).finally(() => {
+        this.isLoading = false
+      })
+    },
+    assignValueIndexFromColumns (columns) {
+      let valueIndex = -1
+
+      if(this.column.autoupdate_query_column) {
+        valueIndex = columns.findIndex((col) => col.name === this.column.autoupdate_query_column)
+      }
+      if(valueIndex === -1) {
+        valueIndex = columns.findIndex((col) => col.name === 'value' || col.name === 'id')
+      }
+
+      this.valueColumnIndex = valueIndex === -1 ? 0 : valueIndex
     }
   }
 }

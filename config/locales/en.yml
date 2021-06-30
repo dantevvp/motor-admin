@@ -35,10 +35,14 @@ en:
     apply: Apply
     are_you_sure: Are you sure?
     associations: Associations
+    autoupdate_query: Autoupdate query
+    autoupdate_query_column: Autoupdate query column
+    autoupdate_query_column_placeholder: Select a column to fetch a value from
     bar_chart: Bar chart
     base: Base
     boolean: Boolean
     build_custom_form: Build custom form
+    can_autoupdate: Autoupdate
     cancel: Cancel
     cents: Cents
     checkbox: Checkbox

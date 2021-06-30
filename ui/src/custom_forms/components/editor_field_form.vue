@@ -83,6 +83,30 @@
           :column="dataField"
         />
       </FormItem>
+      <FormItem
+        v-if="dataField.can_autoupdate"
+        :label="i18n['autoupdate_query']"
+        prop="autoupdate_query_id"
+      >
+        <QuerySelect v-model="dataField.autoupdate_query_id" />
+      </FormItem>
+      <FormItem
+        v-if="dataField.can_autoupdate"
+        :label="i18n['autoupdate_query_column']"
+        prop="autoupdate_query_column"
+      >
+        <VInput
+          v-model="dataField.autoupdate_query_column"
+          :placeholder="i18n['autoupdate_query_column_placeholder']"
+          @drag.stop
+        />
+      </FormItem>
+      <Checkbox
+        v-model="dataField.can_autoupdate"
+        class="d-block"
+      >
+        {{ ' ' }} {{ i18n['can_autoupdate'] }}
+      </Checkbox>
       <Checkbox
         v-if="showMultiple"
         v-model="dataField.is_array"

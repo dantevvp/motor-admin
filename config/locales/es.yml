@@ -29,8 +29,12 @@ es:
     apply: Aplicar
     are_you_sure: ¿Estás seguro?
     associations: Asociaciones
+    autoupdate_query: Consulta para actualización automática
+    autoupdate_query_column: Columna para actualización automática
+    autoupdate_query_column_placeholder: Elegir columna para actualización automática
     bar_chart: Gráfico de barras
     base: Base
+    can_autoupdate: Actualizar automáticamente
     cancel: Cancelar
     clear_all: Quitar todos
     clear_selection: Quitar selección
