@@ -57,6 +57,7 @@
         :placeholder="i18n['search']"
         size="large"
         class="mb-2"
+        @update:model-value="updateQueryParams"
       />
       <div :style="{ height: 'calc(var(--vh, 100vh) - 274px)', overflowY: 'auto', position: 'relative' }">
         <Spin
@@ -138,8 +139,21 @@ export default {
     }
   },
   computed: {
+    normalizedQueryParams () {
+      const params = {}
+
+      if (this.selectedTags.length) {
+        params.tags = this.selectedTags.join(',')
+      }
+
+      if (this.searchQuery) {
+        params.q = this.searchQuery
+      }
+
+      return params
+    },
     tabs () {
-      const query = this.selectedTags.length ? { tags: this.selectedTags.join(',') } : {}
+      const query = this.normalizedQueryParams
 
       return [
         {
@@ -195,6 +209,10 @@ export default {
       } else {
         this.selectedTags = []
       }
+
+      if (to.query?.q) {
+        this.searchQuery = to.query?.q
+      }
     }
   },
   mounted () {
@@ -209,17 +227,20 @@ export default {
     if (this.$route.query?.tags) {
       this.selectedTags = this.$route.query.tags.split(',')
     }
+
+    if (this.$route.query?.q) {
+      this.searchQuery = this.$route.query?.q
+    }
   },
   methods: {
     loadItems,
     onTagsChange (value) {
       this.selectedTags = value
 
-      if (this.selectedTags.length) {
-        this.$router.push({ query: { tags: this.selectedTags.join(',') } })
-      } else {
-        this.$router.push({ query: {} })
-      }
+      this.updateQueryParams()
+    },
+    updateQueryParams () {
+      this.$router.replace({ query: this.normalizedQueryParams })
     },
     reloadItems () {
       this.isLoading = true
