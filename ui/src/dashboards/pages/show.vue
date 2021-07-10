@@ -212,7 +212,7 @@ export default {
           } else {
             this.isEditorOpened = true
           }
-        } else if (JSON.stringify(to.query) !== JSON.stringify(this.variablesData)) {
+        } else if (JSON.stringify(to.query) !== JSON.stringify(from.query)) {
           this.assignVariablesData()
           this.refresh()
         }
@@ -304,10 +304,10 @@ export default {
         this.dashboard = result.data.data
         this.assignVariablesData()
       }).catch((error) => {
-        console.error(error)
-
-        if (error.response.data?.errors) {
+        if (error.response?.data?.errors) {
           this.$Message.error(error.response.data.errors.join('\n'))
+        } else {
+          this.$Message.error(error.message)
         }
       }).finally(() => {
         this.isDashboardLoading = false

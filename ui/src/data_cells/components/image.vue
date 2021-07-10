@@ -11,20 +11,16 @@
       data-pswp-height="3000"
     >
       <img
-        class="table-image"
+        class="info-image"
         :src="value"
       >
     </a>
   </div>
-  <div
+  <img
     v-else
-    class="text-center"
+    class="table-image"
+    :src="value"
   >
-    <img
-      class="table-image"
-      :src="value"
-    >
-  </div>
 </template>
 
 <script>
@@ -32,6 +28,8 @@ import PhotoSwipeLightbox from 'photoswipe/dist/photoswipe-lightbox.esm.js'
 import PhotoSwipe from 'photoswipe/dist/photoswipe.esm.js'
 
 import 'photoswipe/dist/photoswipe.css'
+
+import { copyToClipboard } from '../mixins/copy_to_clipboard'
 
 export default {
   name: 'DataImage',
@@ -57,15 +55,28 @@ export default {
 
       lightbox.init()
     }
+  },
+  methods: {
+    copyToClipboard
   }
 }
 </script>
 
 <style lang="scss">
 .table-image {
+  height: 80px;
+  width: 80px;
+  border-radius: 4px;
+  object-fit: cover;
+  margin: 2px 0;
+  vertical-align: top;
+}
+
+.info-image {
   max-height: 120px;
   vertical-align: top;
 }
+
 .pswp img {
   max-width: none;
   object-fit: contain;

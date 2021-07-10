@@ -76,7 +76,6 @@
     >
       <Settings
         :preferences="dataQuery.preferences"
-        :data="data"
         :columns="columns"
         style="height: 100%"
         @close="toggleSettings"
@@ -93,7 +92,7 @@
         <VariablesForm
           v-model:data="variablesData"
           :variables="dataQuery.preferences.variables"
-          @submit="test"
+          @submit="loadQueryData"
         />
       </div>
 
@@ -143,6 +142,7 @@
             :query-id="query.id"
             :with-alert="!!query.id && $can('create', 'Motor::Alert')"
             :with-settings="isCanEdit"
+            :with-table-toggle="true"
             :show-markdown-table="!widthLessThan('md') && isEdit"
             :preferences="dataQuery.preferences"
             @settings="toggleSettings"
@@ -264,7 +264,7 @@ export default {
     '$route' (to, from) {
       const isQueryChanged = to.params.id?.toString() !== this.query.id?.toString()
 
-      if (!isQueryChanged && (to.name === 'query' || to.name === 'new_query') && JSON.stringify(to.query) !== JSON.stringify(this.variablesData)) {
+      if (!isQueryChanged && (to.name === 'query' || to.name === 'new_query') && JSON.stringify(to.query || {}) !== JSON.stringify(from.query || {})) {
         this.assignVariablesData()
         this.loadQueryData()
       }
@@ -311,9 +311,6 @@ export default {
     this.onMounted()
   },
   methods: {
-    test () {
-      this.loadQueryData()
-    },
     widthLessThan,
     openRevisionsModal () {
       this.$Drawer.open(RevisionsModal, {
@@ -396,10 +393,10 @@ export default {
 
         this.assignVariablesData()
       }).catch((error) => {
-        console.error(error)
-
-        if (error.response.data?.errors) {
+        if (error.response?.data?.errors) {
           this.$Message.error(error.response.data.errors.join('\n'))
+        } else {
+          this.$Message.error(error.message)
         }
       }).finally(() => {
         this.isLoadingQuery = false
@@ -467,7 +464,7 @@ export default {
           this.$Modal.remove()
           this.$Message.info(this.i18n.query_has_been_saved)
 
-          this.$router.push({ name: 'query', params: { id: result.id } })
+          this.$router.push({ name: 'query', params: { id: result.id }, query: this.$route.query })
         }
       }, {
         title: this.i18n.save_query,
@@ -492,7 +489,7 @@ export default {
           this.$Modal.remove()
           this.$Message.info(this.i18n.query_has_been_saved)
 
-          this.$router.push({ name: 'query', params: { id: result.id } })
+          this.$router.push({ name: 'query', params: { id: result.id }, query: this.$route.query })
         }
       }, {
         title: this.i18n.save_query,
@@ -523,7 +520,7 @@ export default {
 
       if (this.dataQuery.sql_body && (this.isEdited || !this.query.id)) {
         return this.runQuery()
-      } else {
+      } else if (this.$route.params.id) {
         return this.runExistingQuery()
       }
     },
@@ -558,7 +555,11 @@ export default {
           this.data = result.data.data
           this.columns = result.data.meta.columns
         }).catch((error) => {
-          this.errors = error.response.data?.errors
+          if (error.response) {
+            this.errors = error.response.data?.errors
+          } else {
+            this.$Message.error(error.message)
+          }
         }).finally(() => {
           this.isLoading = false
         })

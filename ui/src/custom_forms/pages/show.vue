@@ -97,7 +97,14 @@ const columnTypeToFieldMap = {
   integer: 'number',
   float: 'number',
   boolean: 'checkbox',
-  image: 'file'
+  image: 'file',
+  tag: 'input',
+  currency: 'number',
+  percentage: 'number',
+  change: 'number',
+  chart: 'number',
+  link: 'input',
+  color: 'input'
 }
 
 const defaultFormParams = {
@@ -226,10 +233,10 @@ export default {
       }).then((result) => {
         this.form = result.data.data
       }).catch((error) => {
-        console.error(error)
-
-        if (error.response.data?.errors) {
+        if (error.response?.data?.errors) {
           this.$Message.error(error.response.data.errors.join('\n'))
+        } else {
+          this.$Message.error(error.message)
         }
       }).finally(() => {
         this.isLoading = false

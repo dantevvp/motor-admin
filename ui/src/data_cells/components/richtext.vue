@@ -9,6 +9,7 @@
 <script>
 import DOMPurify from 'dompurify'
 import Trix from 'trix'
+import { copyToClipboard } from '../mixins/copy_to_clipboard'
 
 const MAX_LENGTH = 60 // chars
 
@@ -31,7 +32,7 @@ export default {
       if (this.value?.includes('data-trix-attachment')) {
         return Trix.DocumentView.render(Trix.Document.fromHTML(this.value)).innerHTML
       } else {
-        return this.value
+        return DOMPurify.sanitize(this.value)
       }
     },
     truncatedValue () {
@@ -58,6 +59,9 @@ export default {
         }
       }
     }
+  },
+  methods: {
+    copyToClipboard
   }
 }
 </script>

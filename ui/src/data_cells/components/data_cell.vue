@@ -1,49 +1,80 @@
 <template>
   <DateTime
     v-if="isDateTime"
+    ref="cell"
     :value="stringValue"
     :display-time="type !== 'date'"
   />
-  <DataImage
-    v-else-if="isImage"
-    :photoswipe="!textTruncate"
-    :value="stringValue"
+  <DataRichtext
+    v-else-if="isRichtext"
+    ref="cell"
+    :truncate="textTruncate"
+    :value="value"
+  />
+  <DataPercentage
+    v-else-if="isPercentage"
+    ref="cell"
+    :value="value"
+  />
+  <DataColor
+    v-else-if="isColor"
+    ref="cell"
+    :value="value"
+  />
+  <DataChange
+    v-else-if="isChange"
+    ref="cell"
+    :value="value"
+  />
+  <DataChart
+    v-else-if="isChart"
+    ref="cell"
+    :value="value"
   />
   <DataCurrency
     v-else-if="isCurrency"
+    ref="cell"
     :value="value"
     :format="format"
   />
-  <DataUrl
+  <DataTag
+    v-else-if="isTag"
+    ref="cell"
+    :value="value"
+  />
+  <DataImage
+    v-else-if="isImage"
+    ref="cell"
+    :photoswipe="!textTruncate"
+    :value="stringValue"
+  />
+  <DataLink
     v-else-if="isUrl || isPath"
+    ref="cell"
     :truncate="textTruncate"
+    :format="format"
     :value="stringValue"
   />
   <DataBoolean
     v-else-if="isBoolean"
+    ref="cell"
     :value="value"
-  />
-  <DataTag
-    v-else-if="isTag && stringValue"
-    :value="stringValue"
   />
   <DataEmail
     v-else-if="isEmail"
+    ref="cell"
     :truncate="textTruncate"
     :value="value"
   />
   <DataPhone
     v-else-if="isPhone"
-    :truncate="textTruncate"
-    :value="value"
-  />
-  <DataRichtext
-    v-else-if="isRichtext"
+    ref="cell"
     :truncate="textTruncate"
     :value="value"
   />
   <DataText
     v-else
+    ref="cell"
     :truncate="textTruncate"
     :value="stringValue"
   />
@@ -52,7 +83,7 @@
 <script>
 import DateTime from './date_time'
 import DataText from './text'
-import DataUrl from './url'
+import DataLink from './link'
 import DataTag from './tag'
 import DataImage from './image'
 import DataBoolean from './boolean'
@@ -60,6 +91,10 @@ import DataEmail from './email'
 import DataPhone from './phone'
 import DataCurrency from './currency'
 import DataRichtext from './richtext'
+import DataPercentage from './percentage'
+import DataChange from './change'
+import DataChart from './chart'
+import DataColor from './color'
 
 import DataTypes from '../scripts/data_types'
 
@@ -68,14 +103,18 @@ export default {
   components: {
     DataText,
     DateTime,
-    DataUrl,
+    DataLink,
     DataTag,
     DataImage,
     DataBoolean,
     DataEmail,
     DataPhone,
     DataCurrency,
-    DataRichtext
+    DataRichtext,
+    DataPercentage,
+    DataChange,
+    DataChart,
+    DataColor
   },
   props: {
     value: {
@@ -124,11 +163,23 @@ export default {
     isBoolean () {
       return this.type === 'boolean'
     },
+    isPercentage () {
+      return this.type === 'percentage'
+    },
+    isChange () {
+      return this.type === 'change'
+    },
+    isChart () {
+      return this.type === 'chart'
+    },
     isImage () {
-      return (this.isPath && !!this.stringValue.match(/\.(jpg|png|jpeg|wepb|svg)$/i)) || this.type === 'image'
+      return this.type === 'image' || (this.isPath && !!this.stringValue.match(/\.(jpg|png|jpeg|wepb|svg)$/i))
     },
     isCurrency () {
       return this.type === 'currency'
+    },
+    isColor () {
+      return this.type === 'color'
     },
     isRichtext () {
       return this.type === 'richtext'

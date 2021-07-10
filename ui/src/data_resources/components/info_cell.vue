@@ -37,12 +37,14 @@
     <template v-else>
       <DataCell
         v-if="isActiveStorage"
+        ref="dataCell"
         :value="value?.path"
         :text-truncate="false"
         :type="'string'"
       />
       <Reference
         v-else-if="column.reference && value"
+        ref="dataReference"
         :resource-id="referenceId"
         :reference-name="column.reference.model_name"
         :max-length="referenceSize"
@@ -55,6 +57,7 @@
       > - </span>
       <DataCell
         v-else
+        ref="dataCell"
         :value="value"
         :format="column.format"
         :text-truncate="false"
@@ -97,8 +100,16 @@
     <Icon
       v-else-if="isEditable"
       type="md-create"
-      class="cursor-pointer edit-button"
+      data-role="edit"
+      class="cursor-pointer action-button"
       @click="toggleEdit"
+    />
+    <Icon
+      v-if="!isEdit && !isEmpty && withClipboard"
+      type="md-clipboard"
+      data-role="copy"
+      class="cursor-pointer action-button"
+      @click="copyToClipboard"
     />
   </div>
 </template>
@@ -106,7 +117,6 @@
 <script>
 import DataCell from 'data_cells/components/data_cell'
 import FormInput from 'data_forms/components/input'
-import DataTypes from 'data_cells/scripts/data_types'
 import Reference from 'data_cells/components/reference'
 import FormListInput from 'data_forms/components/list_input'
 import { modelNameMap } from 'data_resources/scripts/schema'
@@ -160,8 +170,11 @@ export default {
     }
   },
   computed: {
+    withClipboard () {
+      return !!navigator.clipboard
+    },
     multipleValuesSelectorColumnTypes () {
-      return ['string', 'integer', 'float']
+      return ['string', 'integer', 'float', 'tag']
     },
     model () {
       return modelNameMap[this.resourceName]
@@ -203,7 +216,7 @@ export default {
       return this.editable && (this.column.access_type === 'read_write' || this.isActiveStorage)
     },
     columnType () {
-      return this.column.validators.find((v) => v.includes?.length) ? DataTypes.TAG : this.column.column_type
+      return this.column.column_type
     },
     referenceId () {
       if (this.column.reference.reference_type === 'belongs_to') {
@@ -222,6 +235,19 @@ export default {
     }
   },
   methods: {
+    copyToClipboard () {
+      let promise
+
+      if (this.$refs.dataCell) {
+        promise = this.$refs.dataCell.$refs.cell.copyToClipboard()
+      } else if (this.$refs.dataReference) {
+        promise = this.$refs.dataReference.copyToClipboard()
+      }
+
+      promise.then(() => {
+        this.$Message.info(this.i18n.copied_to_the_clipboard)
+      })
+    },
     toggleEdit () {
       if (!this.isEdit) {
         this.assignResourceData()
@@ -277,7 +303,7 @@ export default {
 @import 'utils/styles/variables';
 
 .info-cell {
-  .edit-button {
+  .action-button {
     opacity: 0;
     margin-left: 5px;
     line-height: unset;
@@ -289,7 +315,7 @@ export default {
   }
 
   &:hover {
-    .edit-button {
+    .action-button {
       opacity: 1;
     }
   }

@@ -97,7 +97,7 @@ export default {
   },
   computed: {
     multipleValuesSelectorColumnTypes () {
-      return ['string', 'integer', 'float']
+      return ['string', 'integer', 'float', 'tag']
     },
     rules () {
       return this.columns.reduce((acc, column) => {
@@ -195,6 +195,10 @@ export default {
       try {
         await this.apiRequest
 
+        if (eventData.button === 'save_and_create') {
+          this.resourceData = this.normalizeResourceData(this.resource)
+        }
+
         this.$emit('success', eventData)
       } catch (error) {
         if (error.response?.data?.errors) {
@@ -207,10 +211,6 @@ export default {
       } finally {
         this.isSaveAndNewLoading = false
         this.isSaveLoading = false
-
-        if (eventData.button === 'save_and_create') {
-          this.resourceData = this.normalizeResourceData(this.resource)
-        }
       }
     }
   }

@@ -1,5 +1,13 @@
 <template>
+  <template v-if="Array.isArray(value)">
+    <DataTag
+      v-for="(val, index) in value"
+      :key="index"
+      :value="val"
+    />
+  </template>
   <div
+    v-else-if="value"
     class="ivu-tag ivu-tag-size-default ivu-tag-checked"
     :class="colorClass"
     :style="bgStyle"
@@ -14,6 +22,7 @@
 <script>
 import { colorsForTag } from '../scripts/tag_colors'
 import { titleize } from 'utils/scripts/string'
+import { copyToClipboard } from '../mixins/copy_to_clipboard'
 
 const COLORS = {
   ok: 'ivu-tag-green',
@@ -40,8 +49,9 @@ export default {
   name: 'DataTag',
   props: {
     value: {
-      type: String,
-      required: true
+      type: [String, Array],
+      required: false,
+      default: () => []
     }
   },
   computed: {
@@ -59,7 +69,8 @@ export default {
     }
   },
   methods: {
-    titleize
+    titleize,
+    copyToClipboard
   }
 }
 </script>
